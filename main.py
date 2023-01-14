@@ -1,3 +1,4 @@
+import os
 import time
 from typing import Sequence, Final
 
@@ -62,9 +63,15 @@ class SOClient(discord.Client):
         await self.wait_until_ready()
 
 
+discord_token: Final = os.getenv("DISCORD_TOKEN")
+
+if discord_token is None:
+    raise RuntimeError("Discord token required but not found.")
+
+
 SOClient(
     intents=discord.Intents.default(),
     channel=0,
     tags=["idris"],
     start_epoch=int(time.time()),
-).run("MTA2Mzg0MjE3NTAzODgwNDAyOQ.GVhQ-L.yWyLdiRNWXbXfFSZ7yT5gQAn06jWuqEQp_9MnI")
+).run(discord_token)

@@ -48,7 +48,7 @@ class SOClient(discord.Client):
         channel = self.get_channel(self._channel)
 
         if channel is None:
-            raise RuntimeError("Discord channel not found")
+            raise RuntimeError(f"Discord channel with ID {self._channel} not found.")
 
         for question in response.json()["items"]:
             print(question["title"])

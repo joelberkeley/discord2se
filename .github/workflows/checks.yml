@@ -1,7 +1,7 @@
 on:
   workflow_dispatch:
-  pull_request:
-    master
+  push:
+    bot
 
 jobs:
   format:

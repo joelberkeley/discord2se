@@ -1,6 +1,6 @@
 .idea/
 
-## GitHub pre-populated ignores start here
+## GitHub Python ignores start here
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

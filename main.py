@@ -83,7 +83,7 @@ else:
     try:
         channel = int(channel_str)
     except ValueError:
-        raise ValueError(f"Failed to convert env var CHANNEL to integer.")
+        raise ValueError("Failed to convert env var CHANNEL to integer.")
 
 tags = os.getenv("TAGS")
 

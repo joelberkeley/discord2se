@@ -1,12 +1,16 @@
+import logging
 import os
 import time
-from typing import Sequence, Final
+from collections.abc import Iterable
+from typing import Final
 
 import discord
 from discord.ext import tasks
 import requests
 
 POLL_FREQUENCY_SECONDS: Final = 60
+
+log = logging.getLogger(__name__)
 
 
 class SOClient(discord.Client):
@@ -15,7 +19,7 @@ class SOClient(discord.Client):
             *,
             intents: discord.Intents,
             channel: int,
-            tags: Sequence[str],
+            tags: Iterable[str],
             start_epoch: int,
     ):
         super().__init__(intents=intents)
@@ -28,11 +32,21 @@ class SOClient(discord.Client):
         self.poll_and_send.start()
 
     async def on_ready(self) -> None:
-        print(f"Logged in as {self.user}")
+        log.info(f"Logged in as {self.user}")
 
     @tasks.loop(seconds=POLL_FREQUENCY_SECONDS)
     async def poll_and_send(self) -> None:
-        last_question_poll = int(time.time())
+        channel = self.get_channel(self._channel)
+
+        last_question_poll = self._last_question_poll
+        self._last_question_poll = int(time.time())
+
+        if channel is None:
+            log.info(f"No channel found with ID {self._channel}, waiting for next poll")
+            return
+
+        log.info(f"Found channel at ID {self._channel}, fetching SO posts")
+
         response = requests.get(
             "https://api.stackexchange.com/2.3/questions",
             params={
@@ -40,20 +54,13 @@ class SOClient(discord.Client):
                 "sort": "creation",
                 "order": "asc",
                 "tagged": self._tags,
-                "min": str(self._last_question_poll),  # `str` to make mypy happy
+                "min": str(last_question_poll),  # `str` to make mypy happy
             }
         )
-        self._last_question_poll = last_question_poll
-
-        channel = self.get_channel(self._channel)
-
-        if channel is None:
-            raise RuntimeError(f"Discord channel with ID {self._channel} not found.")
 
         for question in response.json()["items"]:
-            print(question["title"])
-            print(question["link"])
-
+            url = question["link"]
+            log.info(f"Found SO post at URL: {url}")
             await channel.send(  # type: ignore  # since we're copying the example
                 f"""{question["title"]}\n{question["link"]}"""
             )
@@ -63,15 +70,33 @@ class SOClient(discord.Client):
         await self.wait_until_ready()
 
 
-discord_token: Final = os.getenv("DISCORD_TOKEN")
+discord_token = os.getenv("DISCORD_TOKEN")
 
 if discord_token is None:
-    raise RuntimeError("Discord token required but not found.")
+    raise RuntimeError("Env var DISCORD_TOKEN expected but not found.")
 
+channel_str = os.getenv("CHANNEL")
+
+if channel_str is None:
+    raise RuntimeError("Env var CHANNEL expected but not found.")
+else:
+    try:
+        channel = int(channel_str)
+    except ValueError:
+        raise ValueError(f"Failed to convert env var CHANNEL to integer.")
+
+tags = os.getenv("TAGS")
+
+if tags is None:
+    raise RuntimeError(
+        "Comma-separated Stack Overflow tags expected in env var TAGS, but not found."
+    )
+
+log.info(f"Polling every {POLL_FREQUENCY_SECONDS}s on channel {channel}")
 
 SOClient(
     intents=discord.Intents.default(),
-    channel=0,
-    tags=["idris"],
+    channel=channel,
+    tags=tags.split(','),
     start_epoch=int(time.time()),
 ).run(discord_token)

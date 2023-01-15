@@ -17,7 +17,7 @@ $ pip install .
 Then populate the following environment variables:
 * `DISCORD_TOKEN` with the bot token
 * `CHANNEL` with the ID of the Discord server channel you want SO posts submitted to. The ID is the last number in the channel URL (right click on a channel name in the list of channels in the Discord app and "Copy Link").
-* `TAGS` with the comma-separated Stack Overflow tags to monitor. Note that the bot only fetches posts that match _all_ tags
+* `TAGS` with the comma-separated Stack Overflow tags to monitor. The bot will search for all questions with any of the tags
 
 and run
 ```bash

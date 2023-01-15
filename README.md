@@ -21,5 +21,5 @@ Then populate the following environment variables:
 
 and run
 ```bash
-$ python3 app/main.py
+$ python3 main.py
 ```

@@ -7,7 +7,7 @@ import discord
 from discord.ext import tasks
 import requests
 
-from stackoverflow import QuestionsResponse
+from app.stackoverflow import QuestionsResponse
 
 
 POLL_FREQUENCY_SECONDS: Final = 60
